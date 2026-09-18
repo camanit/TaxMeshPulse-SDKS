@@ -1,0 +1,207 @@
+{
+  "info": {
+    "_postman_id": "9b128fa9-taxmeshpulse-coretax-2026",
+    "name": "TaxMeshPulse (TMP) - Core API Collection",
+    "description": "Official Postman Collection for TaxMeshPulse Unified Tax-as-a-Service & DJP Coretax 2026 Engine.\nWebsite: https://taxmeshpulse.ctar.tech\nRepository: https://github.com/camanit/TaxMeshPulse",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://taxmeshpulse.ctar.tech",
+      "type": "string"
+    },
+    {
+      "key": "apiKey",
+      "value": "tax_test_demo_9a8b7c6d5e4f3a2b1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Kalkulasi Pajak (Pre-Checkout)",
+      "item": [
+        {
+          "name": "Kalkulasi PPN 12% DJP Indonesia (B2B)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{apiKey}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currency\": \"IDR\",\n  \"customer_country\": \"ID\",\n  \"customer_type\": \"business\",\n  \"items\": [\n    {\n      \"sku\": \"SAAS-CRM-01\",\n      \"name\": \"Langganan SaaS CRM & Cloud Hosting Bulanan\",\n      \"unit_price\": 10000000,\n      \"quantity\": 1,\n      \"tax_category\": \"digital_service\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/tax/calculate",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "tax", "calculate"]
+            }
+          }
+        },
+        {
+          "name": "Kalkulasi US State Sales Tax (California)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{apiKey}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currency\": \"USD\",\n  \"customer_country\": \"US\",\n  \"customer_type\": \"individual\",\n  \"items\": [\n    {\n      \"sku\": \"HARDWARE-DEV-01\",\n      \"name\": \"Smart Payment Terminal\",\n      \"unit_price\": 150,\n      \"quantity\": 2\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/tax/calculate",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "tax", "calculate"]
+            }
+          }
+        },
+        {
+          "name": "Kalkulasi EU VAT OSS (Jerman)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{apiKey}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currency\": \"EUR\",\n  \"customer_country\": \"DE\",\n  \"customer_type\": \"individual\",\n  \"items\": [\n    {\n      \"sku\": \"EBOOK-TAX-01\",\n      \"name\": \"Digital Tax Compliance Handbook\",\n      \"unit_price\": 49,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/tax/calculate",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "tax", "calculate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Faktur Pajak & e-Faktur Coretax DJP",
+      "item": [
+        {
+          "name": "Terbitkan e-Faktur Resmi (Async 202 Accepted)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{apiKey}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference_id\": \"INV-2026-0099\",\n  \"currency\": \"IDR\",\n  \"customer\": {\n    \"name\": \"PT Maju Makmur Mandiri\",\n    \"email\": \"finance@majumakmur.co.id\",\n    \"country\": \"ID\",\n    \"type\": \"business\",\n    \"npwp\": \"0123456789012000\",\n    \"address\": \"Jl. Jenderal Sudirman No. 10, Jakarta\"\n  },\n  \"items\": [\n    {\n      \"sku\": \"SRV-ENTERPRISE\",\n      \"name\": \"Cloud ERP Enterprise License\",\n      \"quantity\": 1,\n      \"unit_price\": 25000000,\n      \"tax_category\": \"digital_service\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/tax/invoices",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "tax", "invoices"]
+            }
+          }
+        },
+        {
+          "name": "Cek Status e-Faktur & QR Code DJP",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{apiKey}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/tax/invoices/inv_demo_01",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "tax", "invoices", "inv_demo_01"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. AI Tax Intelligence (GPlay Central Bank)",
+      "item": [
+        {
+          "name": "Klasifikasi Otomatis HS Code & Kode Objek DJP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{apiKey}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Langganan SaaS CRM & Cloud Hosting Bulanan\",\n  \"country\": \"ID\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/ai/classify",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "ai", "classify"]
+            }
+          }
+        },
+        {
+          "name": "Audit Anomali NPWP 16-Digit Pra-Submit",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{apiKey}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer\": {\n    \"name\": \"CV Toko Makmur\",\n    \"country\": \"ID\",\n    \"type\": \"business\",\n    \"npwp\": \"0123456789012345\"\n  },\n  \"items\": [\n    {\n      \"sku\": \"PROD-1\",\n      \"unit_price\": 500000,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/ai/audit",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "ai", "audit"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Pelaporan Bulanan & Webhook",
+      "item": [
+        {
+          "name": "Submit Pelaporan Pajak Bulanan (Monthly Filing)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{apiKey}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"period\": 9,\n  \"year\": 2026\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/tax/filing/monthly",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "tax", "filing", "monthly"]
+            }
+          }
+        },
+        {
+          "name": "Uji Verifikasi Signature HMAC-SHA256",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"raw_payload\": \"{\\\"event\\\":\\\"invoice.filed\\\",\\\"transaction_id\\\":\\\"INV-001\\\"}\",\n  \"signature\": \"9f8a7c6e5d4c3b2a1e0f\",\n  \"secret\": \"whsec_demo_1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/tenant/verify-signature",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "tenant", "verify-signature"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

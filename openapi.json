@@ -1,0 +1,89 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "TaxMeshPulse (TMP) API",
+    "description": "Unified Tax-as-a-Service (TaaS) & Open API Infrastructure for Global Commerce and Indonesian DJP Coretax 2026.\nWebsite: https://taxmeshpulse.ctar.tech\nRepository: https://github.com/camanit/TaxMeshPulse",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CTARTech AI Hub",
+      "url": "https://gplay.ctar.tech"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://taxmeshpulse.ctar.tech",
+      "description": "Production Live Server"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development / Sandbox"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "API_KEY",
+        "description": "Masukkan API Key Anda (tax_test_... atau tax_live_...)"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/v1/tax/calculate": {
+      "post": {
+        "summary": "Kalkulasi Pajak Pra-Checkout",
+        "description": "Menghitung estimasi tarif PPN 12% DJP Indonesia, US Sales Tax, atau EU VAT OSS secara real-time.",
+        "responses": {
+          "200": { "description": "Kalkulasi berhasil" },
+          "400": { "description": "Format data tidak valid" }
+        }
+      }
+    },
+    "/v1/tax/invoices": {
+      "post": {
+        "summary": "Submit Transaksi & Auto-File e-Faktur Resmi",
+        "description": "Menerbitkan e-Faktur Coretax DJP resmi, NSFP, NTTE, dan QR Code pengesahan melalui white-label PJAP.",
+        "responses": {
+          "202": { "description": "Faktur diterima & diproses (Async 202 Accepted)" },
+          "400": { "description": "Payload tidak lengkap" }
+        }
+      }
+    },
+    "/v1/tax/invoices/{id}": {
+      "get": {
+        "summary": "Ambil Status e-Faktur & QR Code DJP",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Dokumen e-Faktur ditemukan" },
+          "404": { "description": "Faktur tidak ditemukan" }
+        }
+      }
+    },
+    "/v1/ai/classify": {
+      "post": {
+        "summary": "AI Smart SKU Classification",
+        "description": "Klasifikasi otomatis HS Code dan kode objek DJP menggunakan AI Bank Data GPlay.",
+        "responses": {
+          "200": { "description": "Klasifikasi AI berhasil" }
+        }
+      }
+    },
+    "/v1/ai/audit": {
+      "post": {
+        "summary": "AI Pre-submission Anomaly Audit",
+        "description": "Mencegah penolakan DJP dengan mendeteksi anomali NPWP 16 digit dan perhitungan DPP.",
+        "responses": {
+          "200": { "description": "Hasil audit integritas transaksi" }
+        }
+      }
+    }
+  }
+}
