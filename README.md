@@ -1,11 +1,11 @@
-# ⚡ TaxMeshPulse SDKs & Connectors Hub
+# ⚡ TaxMeshPulse SDKs, Plugins & Connectors Hub
 ### Official Multi-Language SDKs, WordPress Plugin & Shopify Connector for TaxMeshPulse (TMP)
 
 [![Website](https://img.shields.io/badge/Platform-TaxMeshPulse%20Live-emerald)](https://taxmeshpulse.ctar.tech)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Indonesian Tax: Coretax 2026](https://img.shields.io/badge/Tax%20Compliance-DJP%20Coretax%20PPN%2012%25-red)](https://pajak.go.id)
 
-Repositori ini memuat seluruh kode sumber **SDK resmi, Plugin E-Commerce, dan Webhook Bridge** untuk mengintegrasikan toko online, SaaS, atau aplikasi ERP Anda ke infrastruktur perpajakan otomatis **TaxMeshPulse (TaaS)**.
+Repositori ini memuat seluruh kode sumber **SDK resmi multi-bahasa, Plugin E-Commerce, dan Webhook Bridge** untuk mengintegrasikan toko online, SaaS, atau aplikasi ERP Anda ke infrastruktur perpajakan otomatis **TaxMeshPulse (TaaS)**.
 
 ---
 
@@ -13,9 +13,11 @@ Repositori ini memuat seluruh kode sumber **SDK resmi, Plugin E-Commerce, dan We
 
 1. [🛒 WordPress WooCommerce Plugin (`woocommerce/`)](#1--wordpress-woocommerce-plugin)
 2. [🛍️ Shopify Webhook Connector (`shopify/`)](#2--shopify-webhook-connector)
-3. [🐘 PHP & Laravel SDK (`php/`)](#3--php--laravel-sdk)
-4. [📦 Node.js & TypeScript SDK (`nodejs/`)](#4--nodejs--typescript-sdk)
-5. [🌐 Spesifikasi REST API & Autentikasi](#5--spesifikasi-rest-api--autentikasi)
+3. [🐍 Python SDK (`python/`)](#3--python-sdk)
+4. [🔵 Go (Golang) SDK (`go/`)](#4--go-golang-sdk)
+5. [🐘 PHP & Laravel SDK (`php/`)](#5--php--laravel-sdk)
+6. [📦 Node.js & TypeScript SDK (`nodejs/`)](#6--nodejs--typescript-sdk)
+7. [🌐 Spesifikasi REST API & Autentikasi](#7--spesifikasi-rest-api--autentikasi)
 
 ---
 
@@ -48,137 +50,184 @@ Hubungkan toko Shopify Anda tanpa perlu aplikasi pihak ketiga yang mahal.
 
 ### Cara Setup di Shopify Admin:
 1. Buka **Shopify Admin ➔ Settings ➔ Notifications ➔ Webhooks**.
-2. Klik **Create Webhook**.
-3. Konfigurasi:
+2. Klik **Create Webhook**:
    - **Event**: `Order payment` atau `Order creation`
    - **Format**: `JSON`
    - **URL**: Masukkan URL script receiver Anda (contoh: `https://domain-anda.com/shopify_receiver.php`)
    - **Webhook API Version**: `Latest`
-4. Masukkan Webhook Secret ke konfigurasi script. Setiap ada order yang dibayar, faktur pajak resmi akan otomatis terbit di TaxMeshPulse!
+3. Masukkan Webhook Secret ke konfigurasi script. Faktur pajak resmi otomatis terbit setiap ada pesanan yang lunas!
 
 ---
 
-## 3. 🐘 PHP & Laravel SDK
+## 3. 🐍 Python SDK
+
+Folder: [`python/`](./python/)
+
+File Client: [`taxmeshpulse.py`](./python/taxmeshpulse.py)
+
+Mendukung Python 3.8+ untuk backend Django, FastAPI, Flask, dan data pipeline.
+
+### Contoh Penggunaan:
+```python
+from taxmeshpulse import TaxClient
+
+client = TaxClient(api_key="tax_live_your_api_key_here")
+
+# 1. Hitung Pajak Pra-Checkout (PPN 12% DJP)
+calc = client.calculate(
+    currency="IDR",
+    customer_country="ID",
+    customer_type="business",
+    items=[
+        {"sku": "SKU-01", "name": "Langganan Cloud CRM", "unit_price": 750000, "quantity": 1}
+    ]
+)
+print("Pajak Terhitung:", calc["data"]["total_tax"])
+
+# 2. Terbitkan Faktur Resmi Coretax DJP
+invoice = client.create_invoice({
+    "reference_id": "INV-PY-1001",
+    "currency": "IDR",
+    "customer": {
+        "name": "PT Solusi Cloud Indonesia",
+        "email": "finance@solusicloud.id",
+        "country": "ID",
+        "type": "business",
+        "npwp": "0123456789012345",
+        "address": "Jakarta Selatan"
+    },
+    "items": [
+        {"sku": "SKU-01", "name": "Langganan Cloud CRM", "quantity": 1, "unit_price": 750000}
+    ]
+})
+print("NSFP e-Faktur:", invoice["data"]["compliance"]["nsfp"])
+```
+
+---
+
+## 4. 🔵 Go (Golang) SDK
+
+Folder: [`go/`](./go/)
+
+File Client: [`taxmeshpulse.go`](./go/taxmeshpulse.go)
+
+Client performa tinggi dengan context timeout, zero third-party dependencies, dan koncurrency-safe.
+
+### Instalasi:
+```bash
+go get github.com/camanit/TaxMeshPulse-SDKS/go
+```
+
+### Contoh Penggunaan:
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/camanit/TaxMeshPulse-SDKS/go"
+)
+
+func main() {
+	client, err := taxmeshpulse.NewClient("tax_live_your_api_key_here")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx := context.Background()
+
+	// 1. Kalkulasi Pajak
+	calc, err := client.Calculate(ctx, taxmeshpulse.CalculateParams{
+		Currency:        "IDR",
+		CustomerCountry: "ID",
+		Items: []taxmeshpulse.TaxItem{
+			{SKU: "API-01", Name: "API Gateway Quota", UnitPrice: 500000, Quantity: 2},
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Grand Total: Rp%.2f\n", calc.Data.GrandTotal)
+
+	// 2. Terbitkan Faktur DJP Resmi
+	inv, err := client.CreateInvoice(ctx, taxmeshpulse.UniversalTaxPayload{
+		ReferenceID: "GO-TX-8801",
+		Currency:    "IDR",
+		Customer: taxmeshpulse.Customer{
+			Name:    "PT Golang Microservices",
+			Country: "ID",
+			Type:    "business",
+			NPWP:    "0123456789012345",
+		},
+		Items: []taxmeshpulse.TaxItem{
+			{SKU: "API-01", Name: "API Gateway Quota", UnitPrice: 500000, Quantity: 2},
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Faktur Created. Status: %s, QR: %s\n", inv.Data.Status, inv.Data.Compliance.QRCodeURL)
+}
+```
+
+---
+
+## 5. 🐘 PHP & Laravel SDK
 
 Folder: [`php/`](./php/)
 
 File Client: [`TaxMeshPulseClient.php`](./php/TaxMeshPulseClient.php)
 
-Client PHP modern berbasis cURL, kompatibel dengan PHP 7.4, 8.0, 8.1, 8.2, 8.3, dan 8.4.
+Client PHP native berbasis cURL, kompatibel dengan PHP 7.4 hingga 8.4.
 
-### Contoh Penggunaan:
 ```php
 <?php
 require_once 'TaxMeshPulseClient.php';
 
 use TaxMeshPulse\TaxMeshPulseClient;
 
-// Inisialisasi client dengan API Key
 $tmp = new TaxMeshPulseClient('tax_live_your_api_key_here');
 
-// 1. Kalkulasi Pajak Pra-Checkout (PPN 12%)
+// Kalkulasi Pajak
 $taxEstimate = $tmp->calculate([
-    'currency' => 'IDR',
-    'customer_country' => 'ID',
-    'customer_type' => 'business',
     'items' => [
-        [
-            'sku' => 'PROD-001',
-            'name' => 'Langganan Cloud Software',
-            'unit_price' => 1000000,
-            'quantity' => 1
-        ]
+        ['sku' => 'PROD-001', 'name' => 'Software Hosting', 'unit_price' => 1000000, 'quantity' => 1]
     ]
 ]);
-
-// 2. Terbitkan Faktur Pajak Resmi (Async 202 Accepted)
-$invoice = $tmp->createInvoice([
-    'reference_id' => 'INV-2026-001',
-    'currency' => 'IDR',
-    'customer' => [
-        'name' => 'PT Solusi Teknologi',
-        'email' => 'finance@solusitekno.id',
-        'country' => 'ID',
-        'type' => 'business',
-        'npwp' => '0123456789012345',
-        'address' => 'Jl. Jenderal Sudirman Kav. 1, Jakarta'
-    ],
-    'items' => [
-        [
-            'sku' => 'PROD-001',
-            'name' => 'Langganan Cloud Software',
-            'quantity' => 1,
-            'unit_price' => 1000000
-        ]
-    ]
-]);
-
-// 3. Verifikasi Signature Webhook HMAC
-$isValid = TaxMeshPulseClient::verifyWebhookSignature($rawBody, $signatureHeader, $webhookSecret);
 ```
 
 ---
 
-## 4. 📦 Node.js & TypeScript SDK
+## 6. 📦 Node.js & TypeScript SDK
 
 Folder: [`nodejs/`](./nodejs/)
 
 File Source: [`index.ts`](./nodejs/index.ts)
 
-### Instalasi:
 ```bash
 npm install taxmeshpulse
 ```
 
-### Contoh Penggunaan:
 ```typescript
 import { TaxClient } from 'taxmeshpulse';
 
-const client = new TaxClient({
-  apiKey: 'tax_live_your_api_key_here',
-  environment: 'live',
-});
-
-// Hitung tarif pajak
-const calculation = await client.tax.calculate({
+const client = new TaxClient({ apiKey: 'tax_live_...' });
+const calc = await client.tax.calculate({
   currency: 'IDR',
   customerCountry: 'ID',
-  items: [
-    { sku: 'SKU-A', name: 'Software License', unitPrice: 2500000, quantity: 1 }
-  ]
-});
-
-// Submit faktur pajak
-const invoice = await client.invoices.create({
-  reference_id: 'TRX-9901',
-  currency: 'IDR',
-  customer: {
-    name: 'PT Digital Inovasi',
-    email: 'billing@digitalinovasi.id',
-    country: 'ID',
-    type: 'business',
-    npwp: '0123456789012345'
-  },
-  items: [
-    { sku: 'SKU-A', name: 'Software License', quantity: 1, unit_price: 2500000 }
-  ]
+  items: [{ sku: 'SKU-1', name: 'Cloud Hosting', unitPrice: 200000, quantity: 1 }]
 });
 ```
 
 ---
 
-## 5. 🌐 Spesifikasi REST API & Autentikasi
+## 7. 🌐 Spesifikasi REST API & Autentikasi
 
 - **Base URL Live**: `https://taxmeshpulse.ctar.tech/v1/tax`
 - **Header Autentikasi**: `Authorization: Bearer <YOUR_API_KEY>`
 - **Content-Type**: `application/json`
-
-### Endpoints Utama:
-- `POST /v1/tax/calculate` - Kalkulasi pajak instan
-- `POST /v1/tax/invoices` - Penerbitan e-Faktur Coretax & Dokumen Pajak Resmi
-- `GET /v1/tax/invoices/:id` - Cek status faktur, NSFP & QR Code pengesahan DJP
-- `POST /v1/ai/classify` - Klasifikasi otomatis HS Code & Kategori Pajak via AI GPlay
-- `POST /v1/ai/audit` - Audit anomali NPWP 16 digit & tarif pra-submit
 
 ---
 
